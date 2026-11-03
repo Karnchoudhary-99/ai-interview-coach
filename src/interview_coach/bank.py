@@ -32,7 +32,7 @@ def load_bank(path: str | Path | None = None) -> list[Question]:
     except json.JSONDecodeError as exc:
         raise ValueError(f"question bank file is not valid JSON: {source} ({exc})") from None
     if not isinstance(raw, list):
-        raise ValueError(f"question bank must be a JSON list, got {type(raw).__name__}")
+        raise TypeError(f"question bank must be a JSON list, got {type(raw).__name__}")
     questions = [Question.from_dict(entry) for entry in raw]
     seen: set[str] = set()
     for question in questions:

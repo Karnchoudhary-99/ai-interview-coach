@@ -1,7 +1,5 @@
 import json
 
-import pytest
-
 from interview_coach.cli import main
 
 

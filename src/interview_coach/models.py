@@ -14,7 +14,7 @@ class Difficulty(str, Enum):
     SENIOR = "senior"
 
     @classmethod
-    def from_str(cls, value: str) -> "Difficulty":
+    def from_str(cls, value: str) -> Difficulty:
         try:
             return cls(value.strip().lower())
         except ValueError:
@@ -64,7 +64,7 @@ class Question:
         }
 
     @classmethod
-    def from_dict(cls, data: dict) -> "Question":
+    def from_dict(cls, data: dict) -> Question:
         try:
             return cls(
                 id=str(data["id"]),

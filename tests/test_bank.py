@@ -53,7 +53,7 @@ def test_load_bank_rejects_bad_json_and_missing_file(tmp_path):
         load_bank(tmp_path / "missing.json")
     not_a_list = tmp_path / "obj.json"
     not_a_list.write_text(json.dumps({"id": "x"}), encoding="utf-8")
-    with pytest.raises(ValueError):
+    with pytest.raises(TypeError):
         load_bank(not_a_list)
 
 
