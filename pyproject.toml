@@ -8,8 +8,14 @@ version = "0.1.0"
 description = "Mock interviews with LLM feedback, voice + text."
 requires-python = ">=3.11"
 
+[project.scripts]
+interview-coach = "interview_coach.cli:main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+interview_coach = ["data/*.json"]
 
 [tool.ruff]
 line-length = 100
