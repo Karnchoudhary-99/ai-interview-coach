@@ -9,7 +9,7 @@ structured questions, answer scoring, and actionable feedback.
 - [x] Question bank + interview session engine
 - [x] Answer scoring + feedback reports
 - [x] Voice input/output support
-- [ ] Self-review checklist, then public
+- [x] Self-review checklist, then public
 
 ## Question bank + session engine
 
