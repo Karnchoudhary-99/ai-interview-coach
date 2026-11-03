@@ -8,6 +8,7 @@ import sys
 
 from .bank import categories, filter_bank, load_bank
 from .models import Difficulty
+from .report import load_transcript, render_markdown, render_text, score_session
 from .session import InterviewSession, SessionConfig
 
 
@@ -26,6 +27,11 @@ def build_parser() -> argparse.ArgumentParser:
     practice.add_argument("--seed", type=int, default=None, help="Seed for reproducible selection")
     practice.add_argument("--bank", default=None, help="Path to a custom question-bank JSON file")
     practice.add_argument("--transcript", default=None, help="Write the session transcript as JSON here")
+    practice.add_argument("--report", default=None, help="Write the feedback report as Markdown here")
+
+    score = sub.add_parser("score", help="Score a saved session transcript")
+    score.add_argument("--transcript", required=True, help="Transcript JSON file to score")
+    score.add_argument("--report", default=None, help="Write the feedback report as Markdown here")
     return parser
 
 
@@ -37,6 +43,26 @@ def _cmd_bank(args: argparse.Namespace) -> int:
         return 0
     for question in questions:
         print(f"[{question.id}] ({question.category}/{question.difficulty.value}) {question.text}")
+    return 0
+
+
+def _write_report(score, path: str | None) -> None:
+    """Print the text report and, when requested, save the Markdown one."""
+    print()
+    print(render_text(score))
+    if path:
+        with open(path, "w", encoding="utf-8") as fh:
+            fh.write(render_markdown(score))
+        print(f"Report written to {path}")
+
+
+def _cmd_score(args: argparse.Namespace) -> int:
+    try:
+        result = load_transcript(args.transcript)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    _write_report(score_session(result), args.report)
     return 0
 
 
@@ -68,6 +94,8 @@ def _cmd_practice(args: argparse.Namespace) -> int:
         with open(args.transcript, "w", encoding="utf-8") as fh:
             json.dump(result.to_dict(), fh, indent=2)
         print(f"Transcript written to {args.transcript}")
+    if args.report:
+        _write_report(score_session(result), args.report)
     return 0
 
 
@@ -75,6 +103,8 @@ def main(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "bank":
         return _cmd_bank(args)
+    if args.command == "score":
+        return _cmd_score(args)
     return _cmd_practice(args)
 
 
