@@ -9,17 +9,19 @@ from interview_coach.scoring import (
     score_session,
     tokenize,
 )
+
+
 def _question(**kwargs):
-    defaults = dict(
-        id="q1",
-        text="Tell me about a disagreement.",
-        category="behavioral",
-        ideal_points=(
+    defaults = {
+        "id": "q1",
+        "text": "Tell me about a disagreement.",
+        "category": "behavioral",
+        "ideal_points": (
             "describes the disagreement concretely",
             "shows listening to the other view",
             "explains the resolution and its outcome",
         ),
-    )
+    }
     defaults.update(kwargs)
     return Question(**defaults)
 

@@ -60,9 +60,11 @@ def render_text(score: SessionScore) -> str:
     strengths, gaps = strengths_and_gaps(score)
     lines = [
         f"Interview feedback — overall {score.overall:.0f}/100 ({score.band})",
-        f"Answered: {len(score.per_question) - score.skipped_count - score.unanswered_count}"
-        f", skipped: {score.skipped_count}, unreached: {score.unanswered_count}"
-        f", over time limit: {score.over_time_count}, total {score.total_seconds:.0f}s.",
+        (
+            f"Answered: {len(score.per_question) - score.skipped_count - score.unanswered_count}"
+            f", skipped: {score.skipped_count}, unreached: {score.unanswered_count}"
+            f", over time limit: {score.over_time_count}, total {score.total_seconds:.0f}s."
+        ),
         "",
     ]
     if score.category_scores():
@@ -98,10 +100,12 @@ def render_markdown(score: SessionScore) -> str:
     lines = [
         "# Interview feedback",
         "",
-        f"**Overall: {score.overall:.0f}/100 ({score.band})** — "
-        f"answered {len(score.per_question) - score.skipped_count - score.unanswered_count}, "
-        f"skipped {score.skipped_count}, unreached {score.unanswered_count}, "
-        f"over time limit {score.over_time_count}, total {score.total_seconds:.0f}s.",
+        (
+            f"**Overall: {score.overall:.0f}/100 ({score.band})** — "
+            f"answered {len(score.per_question) - score.skipped_count - score.unanswered_count}, "
+            f"skipped {score.skipped_count}, unreached {score.unanswered_count}, "
+            f"over time limit {score.over_time_count}, total {score.total_seconds:.0f}s."
+        ),
         "",
         "## By category",
         "",
