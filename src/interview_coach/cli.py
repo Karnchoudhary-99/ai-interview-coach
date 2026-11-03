@@ -10,6 +10,13 @@ from .bank import categories, filter_bank, load_bank
 from .models import Difficulty
 from .report import load_transcript, render_markdown, render_text, score_session
 from .session import InterviewSession, SessionConfig
+from .voice import (
+    ConsoleVoiceInput,
+    VoiceConfig,
+    VoiceError,
+    describe_voice,
+    make_voice_output,
+)
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -33,6 +40,16 @@ def build_parser() -> argparse.ArgumentParser:
     score.add_argument("--transcript", required=True, help="Transcript JSON file to score")
     score.add_argument("--report", default=None, help="Write the feedback report as Markdown here")
     score.add_argument("--json", default=None, help="Write the machine-readable score as JSON here")
+
+    voice = sub.add_parser("voice", help="Check voice backends, speak text, or listen once")
+    voice.add_argument("--check", action="store_true", help="Report available voice backends")
+    voice.add_argument("--say", default=None, help="Speak this text (system TTS or print fallback)")
+    voice.add_argument("--listen", action="store_true", help="Listen for one answer (typed fallback)")
+    voice.add_argument(
+        "--voice-output", default="auto", choices=["auto", "system", "print"],
+        help="Voice output backend (default auto)",
+    )
+    voice.add_argument("--rate", type=int, default=175, help="System TTS rate in wpm (default 175)")
     return parser
 
 
@@ -55,6 +72,34 @@ def _write_report(score, path: str | None) -> None:
         with open(path, "w", encoding="utf-8") as fh:
             fh.write(render_markdown(score))
         print(f"Report written to {path}")
+
+
+def _cmd_voice(args: argparse.Namespace) -> int:
+    try:
+        config = VoiceConfig(output=args.voice_output, rate=args.rate)
+    except ValueError as exc:
+        print(f"Error: {exc}", file=sys.stderr)
+        return 1
+    if args.check or (not args.say and not args.listen):
+        info = describe_voice()
+        print(f"System TTS engines: {', '.join(info['system_tts_engines']) or 'none found'}")
+        print(f"Print fallback: {'available' if info['print_fallback_available'] else 'unavailable'}")
+        print("Speech recognition bundled: no (voice input falls back to typed lines)")
+        print(f"Voice input fallback: {info['voice_input_fallback']}")
+        return 0
+    if args.say:
+        try:
+            make_voice_output(config).speak(args.say)
+        except VoiceError as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        return 0
+    heard = ConsoleVoiceInput().listen("Say your answer (typed fallback): ")
+    if heard is None:
+        print("No input received.")
+    else:
+        print(f"Heard: {heard}")
+    return 0
 
 
 def _cmd_score(args: argparse.Namespace) -> int:
@@ -111,6 +156,8 @@ def main(argv: list[str] | None = None) -> int:
         return _cmd_bank(args)
     if args.command == "score":
         return _cmd_score(args)
+    if args.command == "voice":
+        return _cmd_voice(args)
     return _cmd_practice(args)
 
 
