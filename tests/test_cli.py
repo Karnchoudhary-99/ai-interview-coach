@@ -30,6 +30,42 @@ def test_practice_command_runs_from_stdin(monkeypatch, capsys, tmp_path):
     assert len(data["questions"]) == 2
 
 
+def test_score_command_scores_a_transcript(monkeypatch, capsys, tmp_path):
+    answers = iter(["my answer", "skip"])
+    monkeypatch.setattr("builtins.input", lambda _prompt: next(answers))
+    transcript = tmp_path / "transcript.json"
+    report = tmp_path / "report.md"
+    main(["practice", "--count", "2", "--seed", "5", "--transcript", str(transcript)])
+    capsys.readouterr()
+    assert main(["score", "--transcript", str(transcript), "--report", str(report)]) == 0
+    out = capsys.readouterr().out
+    assert "Interview feedback" in out
+    assert "# Interview feedback" in report.read_text(encoding="utf-8")
+
+
+def test_score_command_writes_json(monkeypatch, capsys, tmp_path):
+    monkeypatch.setattr("builtins.input", lambda _prompt: "my answer")
+    transcript = tmp_path / "transcript.json"
+    score_json = tmp_path / "score.json"
+    main(["practice", "--count", "1", "--seed", "5", "--transcript", str(transcript)])
+    capsys.readouterr()
+    assert main(["score", "--transcript", str(transcript), "--json", str(score_json)]) == 0
+    data = json.loads(score_json.read_text(encoding="utf-8"))
+    assert "overall" in data and "per_question" in data and data["answered_count"] == 1
+
+
+def test_score_command_rejects_missing_transcript(capsys, tmp_path):
+    assert main(["score", "--transcript", str(tmp_path / "nope.json")]) == 1
+    assert "not found" in capsys.readouterr().err
+
+
+def test_practice_command_writes_report(monkeypatch, capsys, tmp_path):
+    monkeypatch.setattr("builtins.input", lambda _prompt: "my answer")
+    report = tmp_path / "report.md"
+    assert main(["practice", "--count", "1", "--seed", "5", "--report", str(report)]) == 0
+    assert "# Interview feedback" in report.read_text(encoding="utf-8")
+
+
 def test_practice_command_handles_eof(monkeypatch, capsys):
     monkeypatch.setattr("builtins.input", lambda _prompt: (_ for _ in ()).throw(EOFError))
     assert main(["practice", "--count", "2", "--seed", "5"]) == 0
