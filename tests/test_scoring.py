@@ -1,7 +1,6 @@
 import pytest
 
-from interview_coach.bank import load_bank
-from interview_coach.models import Answer, Question
+from interview_coach.models import Answer, Question, SessionResult
 from interview_coach.scoring import (
     point_coverage,
     point_covered,
@@ -10,9 +9,6 @@ from interview_coach.scoring import (
     score_session,
     tokenize,
 )
-from interview_coach.session import InterviewSession, SessionConfig
-
-
 def _question(**kwargs):
     defaults = dict(
         id="q1",
@@ -95,8 +91,6 @@ def test_score_band_boundaries():
 
 
 def test_score_session_aggregates_and_categories():
-    from interview_coach.models import SessionResult
-
     questions = [
         _question(id="q1", category="behavioral"),
         _question(
