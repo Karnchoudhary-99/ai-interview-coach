@@ -50,7 +50,7 @@ coverage is not a judgement of correctness, tone, or structure.
 ```bash
 # Score a saved transcript, print the text report, save Markdown too
 PYTHONPATH=src python -m interview_coach score --transcript transcript.json \
-  --report report.md
+  --report report.md --json score.json
 
 # Get the report straight after a practice session
 PYTHONPATH=src python -m interview_coach practice --count 5 --seed 42 \

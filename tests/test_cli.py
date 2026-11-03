@@ -43,6 +43,17 @@ def test_score_command_scores_a_transcript(monkeypatch, capsys, tmp_path):
     assert "# Interview feedback" in report.read_text(encoding="utf-8")
 
 
+def test_score_command_writes_json(monkeypatch, capsys, tmp_path):
+    monkeypatch.setattr("builtins.input", lambda _prompt: "my answer")
+    transcript = tmp_path / "transcript.json"
+    score_json = tmp_path / "score.json"
+    main(["practice", "--count", "1", "--seed", "5", "--transcript", str(transcript)])
+    capsys.readouterr()
+    assert main(["score", "--transcript", str(transcript), "--json", str(score_json)]) == 0
+    data = json.loads(score_json.read_text(encoding="utf-8"))
+    assert "overall" in data and "per_question" in data and data["answered_count"] == 1
+
+
 def test_score_command_rejects_missing_transcript(capsys, tmp_path):
     assert main(["score", "--transcript", str(tmp_path / "nope.json")]) == 1
     assert "not found" in capsys.readouterr().err
