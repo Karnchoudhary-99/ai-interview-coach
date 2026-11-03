@@ -8,7 +8,7 @@ structured questions, answer scoring, and actionable feedback.
 - [x] Project scaffold (README roadmap, license, gitignore)
 - [x] Question bank + interview session engine
 - [x] Answer scoring + feedback reports
-- [ ] Voice input/output support
+- [x] Voice input/output support
 - [ ] Self-review checklist, then public
 
 ## Question bank + session engine
@@ -55,6 +55,31 @@ PYTHONPATH=src python -m interview_coach score --transcript transcript.json \
 # Get the report straight after a practice session
 PYTHONPATH=src python -m interview_coach practice --count 5 --seed 42 \
   --transcript transcript.json --report report.md
+```
+
+## Voice input/output
+
+Voice mode is dependency-free and honest about its limits: output speaks
+through a system TTS engine when one is installed (`espeak-ng`, `espeak`,
+or macOS `say`), otherwise it narrates on screen with a `[voice]` prefix.
+No speech-recognition engine is bundled, so voice-mode answers are typed
+— the questions are spoken, the answers are not transcribed from audio.
+Any object with a `listen(prompt) -> str | None` method (e.g. one wrapping
+Whisper or a cloud STT API) can replace the typed fallback via the
+`VoiceInput` protocol in `src/interview_coach/voice.py`.
+
+```bash
+# Check what voice backends this machine has
+PYTHONPATH=src python -m interview_coach voice --check
+
+# Speak a line (system TTS, or [voice] print fallback)
+PYTHONPATH=src python -m interview_coach voice --say "Good luck"
+
+# Voice-mode practice: questions spoken, answers typed
+PYTHONPATH=src python -m interview_coach practice --count 5 --seed 42 --voice
+
+# No-microphone demo of the voice flow (scripted answers)
+PYTHONPATH=src python examples/voice_demo.py
 ```
 
 ## License
