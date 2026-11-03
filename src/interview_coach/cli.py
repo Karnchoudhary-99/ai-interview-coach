@@ -35,6 +35,12 @@ def build_parser() -> argparse.ArgumentParser:
     practice.add_argument("--bank", default=None, help="Path to a custom question-bank JSON file")
     practice.add_argument("--transcript", default=None, help="Write the session transcript as JSON here")
     practice.add_argument("--report", default=None, help="Write the feedback report as Markdown here")
+    practice.add_argument("--voice", action="store_true", help="Voice mode: speak questions, typed-fallback answers")
+    practice.add_argument(
+        "--voice-output", default="auto", choices=["auto", "system", "print"],
+        help="Voice output backend for --voice (default auto)",
+    )
+    practice.add_argument("--rate", type=int, default=175, help="System TTS rate in wpm (default 175)")
 
     score = sub.add_parser("score", help="Score a saved session transcript")
     score.add_argument("--transcript", required=True, help="Transcript JSON file to score")
@@ -120,17 +126,36 @@ def _cmd_score(args: argparse.Namespace) -> int:
 def _cmd_practice(args: argparse.Namespace) -> int:
     session = InterviewSession(load_bank(args.bank), SessionConfig(args.count, args.category, args.seed))
     question = session.start()
+    voice_output = None
+    voice_input = None
+    if args.voice:
+        try:
+            voice_output = make_voice_output(VoiceConfig(output=args.voice_output, rate=args.rate))
+        except (ValueError, VoiceError) as exc:
+            print(f"Error: {exc}", file=sys.stderr)
+            return 1
+        voice_input = ConsoleVoiceInput()
+        print(f"Voice mode on (output: {voice_output.name}; answers typed — no STT engine bundled).\n")
     print(f"Mock interview started: {session.position[1]} questions. Type 'skip' to pass.\n")
     while question is not None:
         pos, total = session.position
         print(f"Q{pos}/{total} [{question.category}/{question.difficulty.value}]: {question.text}")
+        if voice_output is not None:
+            voice_output.speak(question.text)
         for follow_up in question.follow_ups:
             print(f"  (follow-up: {follow_up})")
-        try:
-            text = input("Your answer: ").strip()
-        except EOFError:
-            print("\nInput ended; finishing early.")
-            break
+        if voice_input is not None:
+            text = voice_input.listen("Your answer: ")
+            if text is None:
+                print("\nInput ended; finishing early.")
+                break
+            text = text.strip()
+        else:
+            try:
+                text = input("Your answer: ").strip()
+            except EOFError:
+                print("\nInput ended; finishing early.")
+                break
         if text.lower() == "skip":
             question = session.skip()
         else:
@@ -141,6 +166,10 @@ def _cmd_practice(args: argparse.Namespace) -> int:
         f"Done: {len(result.answered)} answered, {len(result.skipped)} skipped, "
         f"{result.total_seconds:.0f}s total."
     )
+    if voice_output is not None:
+        voice_output.speak(
+            f"Done: {len(result.answered)} answered, {len(result.skipped)} skipped."
+        )
     if args.transcript:
         with open(args.transcript, "w", encoding="utf-8") as fh:
             json.dump(result.to_dict(), fh, indent=2)
