@@ -19,8 +19,19 @@ from .models import Answer, Question, SessionResult
 
 _TOKEN_RE = re.compile(r"[a-z0-9]+")
 
-# Words that carry no evidence about a point on their own.
+# Words that carry no evidence about a point on their own. This includes
+# the rubric's framing verbs ("shows", "describes", "explains"): a point
+# is about its content words, not about the verb that introduces it, so
+# "shows listening to the other view" is graded on listening/other/view.
 STOPWORDS = frozenset(
+    {
+        "shows", "show", "describes", "describe", "explains", "explain",
+        "states", "state", "names", "name", "gives", "give", "discusses",
+        "discuss", "mentions", "mention", "covers", "cover", "includes",
+        "include", "identifies", "identify",
+    }
+    |
+    frozenset(
     {
         "a", "an", "the", "and", "or", "to", "of", "in", "on", "for", "with",
         "by", "at", "from", "is", "are", "was", "were", "be", "been", "it",
@@ -31,6 +42,7 @@ STOPWORDS = frozenset(
         "over", "under", "after", "before", "when", "while", "how", "what",
         "which", "who", "whom", "not", "no", "yes", "but", "also",
     }
+    )
 )
 
 # A point counts as covered when at least this fraction of its content
