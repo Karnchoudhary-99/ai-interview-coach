@@ -23,8 +23,9 @@ from __future__ import annotations
 import shutil
 import subprocess
 import sys
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol, Sequence
+from typing import Protocol
 
 
 class VoiceError(RuntimeError):
@@ -114,7 +115,7 @@ class SystemVoiceOutput:
     def speak(self, text: str) -> None:
         builder = dict(_TTS_ENGINES)[self._engine]
         try:
-            subprocess.run(builder(self.rate, text), check=True)  # noqa: S603
+            subprocess.run(builder(self.rate, text), check=True)
         except (OSError, subprocess.CalledProcessError) as exc:
             raise VoiceError(f"TTS engine {self._engine!r} failed: {exc}") from exc
 
@@ -179,12 +180,14 @@ class VoiceConfig:
             raise ValueError("rate must be between 80 and 400 words per minute")
 
 
-def make_voice_output(config: VoiceConfig = VoiceConfig()) -> VoiceOutput:
+def make_voice_output(config: VoiceConfig | None = None) -> VoiceOutput:
     """Build the output backend for a config.
 
     ``auto`` returns system TTS when an engine is installed, otherwise
     the print fallback. ``system`` raises VoiceError when none is.
     """
+    if config is None:
+        config = VoiceConfig()
     if config.output == "print":
         return PrintVoiceOutput()
     if config.output == "system":
