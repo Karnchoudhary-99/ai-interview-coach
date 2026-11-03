@@ -14,8 +14,9 @@ from interview_coach.session import InterviewSession, SessionConfig
 from interview_coach.voice import PrintVoiceOutput, ScriptedVoiceInput
 
 ANSWERS = [
-    "I led a migration where requirements changed weekly, so I kept a "
-    "short decision log and re-planned in small increments with the team.",
+    "I led a migration where requirements changed weekly. I created clarity "
+    "with a short decision log, kept stakeholder communication weekly, and "
+    "made explicit trade-offs under uncertainty about scope versus schedule.",
     "skip",
 ]
 
