@@ -9,5 +9,6 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install pytest ruff
+      - run: pip install -e .
       - run: ruff check src tests
       - run: python -m pytest tests -q
