@@ -32,6 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     score = sub.add_parser("score", help="Score a saved session transcript")
     score.add_argument("--transcript", required=True, help="Transcript JSON file to score")
     score.add_argument("--report", default=None, help="Write the feedback report as Markdown here")
+    score.add_argument("--json", default=None, help="Write the machine-readable score as JSON here")
     return parser
 
 
@@ -62,7 +63,12 @@ def _cmd_score(args: argparse.Namespace) -> int:
     except ValueError as exc:
         print(f"Error: {exc}", file=sys.stderr)
         return 1
-    _write_report(score_session(result), args.report)
+    scored = score_session(result)
+    _write_report(scored, args.report)
+    if args.json:
+        with open(args.json, "w", encoding="utf-8") as fh:
+            json.dump(scored.to_dict(), fh, indent=2)
+        print(f"Score written to {args.json}")
     return 0
 
 
